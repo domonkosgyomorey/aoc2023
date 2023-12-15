@@ -1,20 +1,44 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <ranges>
 #include <vector>
 #include <unordered_map>
 
-std::vector<std::string> read_file(const char* file_path);
-int day1_1(std::vector<std::string> input);
-int day1_2(const std::vector<std::string> input);
+#define AOC2023_FN(fn_name) int (fn_name)(std::vector<std::string> input)
+#define VEC_OF_STR std::vector<std::string>
+
+VEC_OF_STR split_string(const std::string& s, char delimiter);
+VEC_OF_STR read_file(const char* file_path);
+std::string ltrim(const std::string& s);
+AOC2023_FN(day1_1);
+AOC2023_FN(day1_2);
+AOC2023_FN(day2_1);
+AOC2023_FN(day2_2);
 
 int main(int argc, char** argv) {
-	std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
-	std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
+	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
+	//std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
+	//std::cout << day2_1(read_file("day2_1.txt")) << std::endl;
+	std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
 	return 0;
 }
 
-std::vector<std::string> read_file(const char* file_path) {
+VEC_OF_STR split_string(const std::string& s, char delimiter) {
+	VEC_OF_STR tokens;
+	size_t start = 0, end = 0;
+
+	while ((end = s.find(delimiter, start)) != std::string::npos) {
+		tokens.push_back(s.substr(start, end - start));
+		start = end + 1;
+	}
+
+	tokens.push_back(s.substr(start));
+	return tokens;
+}
+
+
+VEC_OF_STR read_file(const char* file_path) {
 	
 	std::fstream file(file_path);
 
@@ -23,7 +47,7 @@ std::vector<std::string> read_file(const char* file_path) {
 		exit(-1);
 	}
 
-	std::vector<std::string> lines;
+	VEC_OF_STR lines;
 	std::string line;
 
 	while (std::getline(file, line)) {
@@ -36,7 +60,17 @@ std::vector<std::string> read_file(const char* file_path) {
 	return lines;
 }
 
-int day1_1(const std::vector<std::string> input) {
+std::string ltrim(const std::string& s) {
+	size_t start = s.find_first_not_of(" \t\f\v\n\r");
+
+	if (start != std::string::npos) {
+		return s.substr(start);
+	}
+
+	return "";
+}
+
+AOC2023_FN(day1_1) {
 	const char* digits = "0123456789";
 	std::size_t sum = 0;
 	for(auto line : input){
@@ -49,9 +83,9 @@ int day1_1(const std::vector<std::string> input) {
 
 
 // TODO: Something is wrong somewhere in my logic
-int day1_2(const std::vector<std::string> input) {
+AOC2023_FN(day1_2) {
 	
-	std::vector<std::string> transformed_input;
+	VEC_OF_STR transformed_input;
 	
 	std::unordered_map<std::string, uint16_t> word_to_digit;
 	// +1, cause word_to_digit["wrong_str"] == 0
@@ -97,4 +131,57 @@ int day1_2(const std::vector<std::string> input) {
 	}
 
 	return day1_1(transformed_input);
+}
+
+AOC2023_FN(day2_1) {
+	int res = 0;
+	int id = 1;
+	for (auto line : input) {
+		VEC_OF_STR line_spl = split_string(line, ':');
+		VEC_OF_STR games = split_string(line_spl[1], ';');
+		for (auto game : games) {
+			VEC_OF_STR inner_games = split_string(game, ',');
+			std::unordered_map<std::string, uint32_t> score;
+			score["blue"] = 0;
+			score["green"] = 0;
+			score["red"] = 0;
+			for (auto inner_game : inner_games) {
+				inner_game = ltrim(inner_game);
+				VEC_OF_STR params = split_string(inner_game, ' ');
+				score[params[1]] += std::stoi(params[0]);
+			}
+			if (score["blue"] > 14 || score["green"] > 13 || score["red"] > 12) {
+				goto end_game;
+			}
+		}
+		res += id;
+	end_game:
+		id++;
+	}
+	return res;
+}
+
+AOC2023_FN(day2_2) {
+	int res = 0;
+	for (auto line : input) {
+		VEC_OF_STR line_spl = split_string(line, ':');
+		VEC_OF_STR games = split_string(line_spl[1], ';');
+		std::unordered_map<std::string, uint32_t> score;
+		score["blue"] = 0;
+		score["green"] = 0;
+		score["red"] = 0;
+		for (auto game : games) {
+			VEC_OF_STR inner_games = split_string(game, ',');
+			for (auto inner_game : inner_games) {
+				inner_game = ltrim(inner_game);
+				VEC_OF_STR params = split_string(inner_game, ' ');
+				uint32_t num_of_col = std::stoi(params[0]);
+				if (score[params[1]] < num_of_col) {
+					score[params[1]] = num_of_col;
+				}
+			}
+		}
+		res += score["blue"]*score["green"]*score["red"];
+	}
+	return res;
 }
