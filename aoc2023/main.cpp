@@ -40,8 +40,8 @@ int day1_1(const std::vector<std::string> input) {
 	const char* digits = "0123456789";
 	std::size_t sum = 0;
 	for(auto line : input){
-			uint16_t first_digit = (line.at(line.find_first_of(digits)) - '0');
-			uint16_t last_digit = (line.at(line.find_last_of(digits)) - '0');
+		uint16_t first_digit = (line[line.find_first_of(digits)] - '0');
+		uint16_t last_digit = (line[line.find_last_of(digits)] - '0');
 			sum += 10*first_digit + last_digit;
 	}
 	return sum;
@@ -71,8 +71,14 @@ int day1_2(const std::vector<std::string> input) {
 
 	// For each row
 	for (auto line : input) {
+		std::string l;
+
 		// For each char
 		for (std::size_t i = 0; i < line.length(); i++) {
+			if (isdigit(line[i])) {
+				l.append(std::to_string(line[i]));
+				continue;
+			}
 			// check the substring from i to j
 			for (int j = MIN_WORD_LEN; j < MAX_WORD_LEN && i + j - 1 < line.length(); j++) {
 				auto val = word_to_digit[line.substr(i, j)];
@@ -80,13 +86,14 @@ int day1_2(const std::vector<std::string> input) {
 					// cause the mapping
 					val -= 1;
 
-					line.replace(i, j, std::to_string(val));
+					// put the transformed numbers 
+					l.append(std::to_string(val));
 					break;
 				}
 			}
 		}
-		// push the replaced lines into a vector (cause the local line var)
-		transformed_input.push_back(line);
+		if(!l.empty())
+			transformed_input.push_back(l);
 	}
 
 	return day1_1(transformed_input);
