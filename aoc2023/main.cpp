@@ -10,6 +10,7 @@
 #include <thread>
 
 #define AOC2023_FN(fn_name) size_t (fn_name)(std::vector<std::string> input)
+#define AOC2023_SFN(fn_name) int64_t (fn_name)(std::vector<std::string> input)
 #define VEC_OF_STR std::vector<std::string>
 
 VEC_OF_STR split_string(const std::string& s, char delimiter);
@@ -42,6 +43,9 @@ AOC2023_FN(day7_1);
 AOC2023_FN(day8_1);
 AOC2023_FN(day8_2);
 
+AOC2023_FN(day9_1);
+AOC2023_SFN(day9_2);
+
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
 	//std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
@@ -56,7 +60,9 @@ int main(int argc, char** argv) {
 	//std::cout << day6_2(read_file("day6_2.txt")) << std::endl;
 	//std::cout << day7_1(read_file("day7_1.txt")) << std::endl;
 	//std::cout << day8_1(read_file("day8_1.txt")) << std::endl;
-	std::cout << day8_2(read_file("day8_2.txt")) << std::endl;
+	//std::cout << day8_2(read_file("day8_2.txt")) << std::endl;
+	//std::cout << day9_1(read_file("day9_1.txt")) << std::endl;
+	std::cout << day9_2(read_file("day9_2.txt")) << std::endl;
 	return 0;
 }
 
@@ -135,13 +141,9 @@ VEC_OF_STR split_numbers(const std::string& input) {
 
 	while (ss >> token) {
 		bool isNumber = true;
-
-		// Ellenõrzés, hogy a token csak számokat tartalmaz-e
-		for (char c : token) {
-			if (!std::isdigit(c)) {
-				isNumber = false;
-				break;
-			}
+		
+		if (!(token.empty() || std::isdigit(token[0]) || (token.size() > 1 && token[0] == '-' && std::isdigit(token[1])))) {
+			isNumber = false;
 		}
 
 		if (isNumber) {
@@ -155,11 +157,16 @@ VEC_OF_STR split_numbers(const std::string& input) {
 size_t string_to_number(std::string num) {
 	size_t i = 0;
 	size_t res = 0;
+	bool neg = false;
+	if (num[i] == '-') {
+		neg = true;
+		i++;
+	}
 	while (isdigit(num[i])) {
 		res = res * 10 + (num[i] - '0');
 		i++;
 	}
-	return res;
+	return res*(neg?-1:1);
 }
 
 #pragma region Day1
@@ -794,6 +801,103 @@ AOC2023_FN(day8_2) {
 		}
 	}
 	return counter;
+}
+
+#pragma endregion
+
+#pragma region Day9
+
+AOC2023_FN(day9_1) {
+	int64_t result = 0;
+	for (auto line : input) {
+		VEC_OF_STR str_nums = split_numbers(line);
+		std::vector<std::vector<int64_t>> rows;
+		std::vector<int64_t> vec;
+		for (auto sn : str_nums) {
+			vec.push_back(string_to_number(sn));
+		}
+		rows.push_back(vec);
+		while (true) {
+			std::vector<int64_t> previous = rows[rows.size() - 1];
+			std::vector<int64_t> new_vec;
+
+			for (size_t i = 0; i < previous.size()-1; i++) {
+				new_vec.push_back(previous[i + 1] - previous[i]);
+			}
+
+			rows.push_back(new_vec);
+
+			bool exit = true;
+			for (auto n : rows[rows.size() - 1]) {
+				if (n != 0) {
+					exit = false;
+					break;
+				}
+			}
+			if (exit) {
+				break;
+			}
+		}
+		// We know the last row is full zero, so we put one more zero there
+		rows[rows.size() - 1].push_back(0);
+
+		for (size_t i = rows.size() - 1; i >= 1; i--) {
+			// without & , c++ just copy the data from the right-side
+			std::vector<int64_t>& row = rows[i];
+			std::vector<int64_t>& prev_row = rows[i-1];
+			prev_row.push_back(row[row.size() - 1] + prev_row[prev_row.size() - 1]);
+		}
+		result += rows[0][rows[0].size() - 1];
+	}
+	return result;
+}
+
+// The return value signed
+//      |
+//      V
+AOC2023_SFN(day9_2) {
+	int64_t result = 0;
+	for (auto line : input) {
+		VEC_OF_STR str_nums = split_numbers(line);
+		std::vector<std::vector<int64_t>> rows;
+		std::vector<int64_t> vec;
+		for (auto sn : str_nums) {
+			vec.push_back(string_to_number(sn));
+		}
+		rows.push_back(vec);
+		while (true) {
+			std::vector<int64_t> previous = rows[rows.size() - 1];
+			std::vector<int64_t> new_vec;
+
+			for (size_t i = 0; i < previous.size() - 1; i++) {
+				new_vec.push_back(previous[i + 1] - previous[i]);
+			}
+
+			rows.push_back(new_vec);
+
+			bool exit = true;
+			for (auto n : rows[rows.size() - 1]) {
+				if (n != 0) {
+					exit = false;
+					break;
+				}
+			}
+			if (exit) {
+				break;
+			}
+		}
+		// We know the last row is full zero, so we put one more zero there
+		rows[rows.size() - 1].push_back(0);
+
+		for (size_t i = rows.size() - 1; i >= 1; i--) {
+			// without & , c++ just copy the data from the right-side
+			std::vector<int64_t>& row = rows[i];
+			std::vector<int64_t>& prev_row = rows[i - 1];
+			prev_row.insert(prev_row.begin(), prev_row[0] - row[0]);
+		}
+		result += rows[0][0];
+	}
+	return result;
 }
 
 #pragma endregion
