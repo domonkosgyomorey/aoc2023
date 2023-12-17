@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <sstream>
 #include <cctype>
+#include <thread>
 
 #define AOC2023_FN(fn_name) size_t (fn_name)(std::vector<std::string> input)
 #define VEC_OF_STR std::vector<std::string>
@@ -14,7 +15,9 @@
 VEC_OF_STR split_string(const std::string& s, char delimiter);
 VEC_OF_STR read_file(const char* file_path);
 std::string ltrim(const std::string& s);
+size_t convert_digits_to_number(const std::string& s);
 VEC_OF_STR split_numbers(const std::string& input);
+size_t string_to_number(std::string num);
 
 AOC2023_FN(day1_1);
 AOC2023_FN(day1_2);
@@ -25,6 +28,8 @@ AOC2023_FN(day4_1);
 AOC2023_FN(day4_2);
 AOC2023_FN(day5_1);
 AOC2023_FN(day5_2);
+AOC2023_FN(day6_1);
+AOC2023_FN(day6_2);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
@@ -36,6 +41,8 @@ int main(int argc, char** argv) {
 	//std::cout << day4_2(read_file("day4_2.txt")) << std::endl;
 	//std::cout << day5_1(read_file("day5_1.txt")) << std::endl;
 	//std::cout << day5_2(read_file("day5_2.txt")) << std::endl;
+	//std::cout << day6_1(read_file("day6_1.txt")) << std::endl;
+	std::cout << day6_2(read_file("day6_2.txt")) << std::endl;
 	return 0;
 }
 
@@ -85,6 +92,16 @@ std::string ltrim(const std::string& s) {
 	return "";
 }
 
+size_t convert_digits_to_number(const std::string& s) {
+	size_t num = 0;
+	for (auto c : s) {
+		if (isdigit(c)) {
+			num = num * 10 + (c - '0');
+		}
+	}
+	return num;
+}
+
 VEC_OF_STR split_numbers(const std::string& input) {
 	VEC_OF_STR numbers;
 	std::stringstream ss(input);
@@ -107,6 +124,16 @@ VEC_OF_STR split_numbers(const std::string& input) {
 	}
 
 	return numbers;
+}
+
+size_t string_to_number(std::string num) {
+	size_t i = 0;
+	size_t res = 0;
+	while (isdigit(num[i])) {
+		res = res * 10 + (num[i] - '0');
+		i++;
+	}
+	return res;
 }
 
 #pragma region Day1
@@ -398,16 +425,6 @@ AOC2023_FN(day4_2) {
 
 #pragma region Day5
 
-size_t string_to_number(std::string num) {
-	size_t i = 0;
-	size_t res = 0;
-	while (isdigit(num[i])) {
-		res = res * 10 + (num[i] - '0');
-		i++;
-	}
-	return res;
-}
-
 typedef struct Mapping {
 	size_t src;
 	size_t dst;
@@ -530,6 +547,40 @@ AOC2023_FN(day5_2) {
 	}
 	input[0] = seeds.str();
 	return day5_1(input);
+}
+
+#pragma endregion
+
+#pragma region Day6
+
+AOC2023_FN(day6_1) {
+	size_t result = 1;
+
+	auto str_times = split_numbers(input[0]);
+	auto str_record_dists = split_numbers(input[1]);
+	for (int i = 0; i < str_times.size(); i++) {
+		size_t time_cap = string_to_number(str_times[i]);
+		size_t record_distance = string_to_number(str_record_dists[i]);
+
+		size_t possible_states = 0;
+		for (int j = 0; j < time_cap; j++) {
+			possible_states += (j * (time_cap-j) > record_distance);
+		}
+		result *= possible_states;
+	}
+	return result;
+}
+
+AOC2023_FN(day6_2) {
+	size_t time_cap = convert_digits_to_number(input[0]);
+	size_t record_distance = convert_digits_to_number(input[1]);
+
+	size_t possible_states_count = 0;
+
+	for (int i = 0; i < time_cap; i++)
+		possible_states_count += (i * (time_cap - i) > record_distance);
+
+	return possible_states_count;
 }
 
 #pragma endregion
