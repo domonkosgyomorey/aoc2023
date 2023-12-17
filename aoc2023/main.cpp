@@ -4,7 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
-
+#include <algorithm>
 #include <sstream>
 #include <cctype>
 
@@ -24,6 +24,7 @@ AOC2023_FN(day3_1);
 AOC2023_FN(day4_1);
 AOC2023_FN(day4_2);
 AOC2023_FN(day5_1);
+AOC2023_FN(day5_2);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
@@ -33,7 +34,8 @@ int main(int argc, char** argv) {
 	// TODO: correct some miss calculations std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
 	//std::cout << day4_1(read_file("day4_1.txt")) << std::endl;
 	//std::cout << day4_2(read_file("day4_2.txt")) << std::endl;
-	std::cout << day5_1(read_file("day5_1.txt")) << std::endl;
+	//std::cout << day5_1(read_file("day5_1.txt")) << std::endl;
+	//std::cout << day5_2(read_file("day5_2.txt")) << std::endl;
 	return 0;
 }
 
@@ -418,9 +420,11 @@ typedef struct Mapping {
 		range = string_to_number(nums[2]);
 	}
 
+	Mapping(size_t src, size_t range) : src(src), range(range) {}
+
 } Mapping;
 
-int day5_1_mapping_from_ranges(const std::vector<Mapping> &mappings, long value) {
+size_t day5_1_mapping_from_ranges(const std::vector<Mapping> &mappings, size_t value) {
 	for (auto mapping : mappings) {
 		if (mapping.src <= value && value < mapping.src + mapping.range) {
 			return value + (mapping.dst - mapping.src);
@@ -475,6 +479,57 @@ AOC2023_FN(day5_1) {
 		}
 	}
 	return min_location;
+}
+
+std::vector<Mapping> merge_ranges(std::vector<Mapping> ranges) {
+	std::vector<Mapping> merged_ranges;
+
+	if (ranges.empty()) {
+		return merged_ranges;
+	}
+
+	std::vector<Mapping> sorted_ranges = ranges;
+	std::sort(sorted_ranges.begin(), sorted_ranges.end(), [](const Mapping& a, const Mapping& b) {
+		return a.src < b.src;
+		});
+
+	Mapping currentRange = sorted_ranges[0];
+	for (size_t i = 1; i < sorted_ranges.size(); ++i) {
+		if (currentRange.src + currentRange.range >= sorted_ranges[i].src) {
+			currentRange.range = std::max(currentRange.src + currentRange.range, sorted_ranges[i].src + sorted_ranges[i].range) - currentRange.src;
+		}
+		else {
+			merged_ranges.push_back(currentRange);
+			currentRange = sorted_ranges[i];
+		}
+	}
+
+	merged_ranges.push_back(currentRange);
+
+	return merged_ranges;
+}
+
+// TODO: We need extreme optimization to run it
+AOC2023_FN(day5_2) {
+	// start, range
+	// example =>  seeds: 87 13
+	
+	VEC_OF_STR ranges = split_numbers(input[0]);
+	std::vector<Mapping> num_ranges;
+	for (int i = 0; i < ranges.size(); i+=2) {
+		Mapping mapping(string_to_number(ranges[i]), string_to_number(ranges[i + 1]));
+		num_ranges.push_back(mapping);
+	}
+
+	num_ranges = merge_ranges(num_ranges);
+
+	std::ostringstream seeds;
+	for (size_t i = 0; i < num_ranges.size(); i++) {
+		for(size_t j = 0; j < num_ranges[i].range; j++)
+			seeds << (std::to_string(num_ranges[i].src + j) + " ");
+	}
+	input[0] = seeds.str();
+	return day5_1(input);
 }
 
 #pragma endregion
