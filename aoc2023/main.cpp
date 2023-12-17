@@ -1,26 +1,36 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <ranges>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
-#define AOC2023_FN(fn_name) int (fn_name)(std::vector<std::string> input)
+#include <sstream>
+#include <cctype>
+
+#define AOC2023_FN(fn_name) size_t (fn_name)(std::vector<std::string> input)
 #define VEC_OF_STR std::vector<std::string>
 
 VEC_OF_STR split_string(const std::string& s, char delimiter);
 VEC_OF_STR read_file(const char* file_path);
 std::string ltrim(const std::string& s);
+VEC_OF_STR split_numbers(const std::string& input);
 AOC2023_FN(day1_1);
 AOC2023_FN(day1_2);
 AOC2023_FN(day2_1);
 AOC2023_FN(day2_2);
+AOC2023_FN(day3_1);
+AOC2023_FN(day4_1);
+AOC2023_FN(day4_2);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
 	//std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
 	//std::cout << day2_1(read_file("day2_1.txt")) << std::endl;
-	std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
+	//std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
+	// TODO: correct some miss calculations std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
+	//std::cout << day4_1(read_file("day4_1.txt")) << std::endl;
+	std::cout << day4_2(read_file("day4_2.txt")) << std::endl;
 	return 0;
 }
 
@@ -70,9 +80,33 @@ std::string ltrim(const std::string& s) {
 	return "";
 }
 
+VEC_OF_STR split_numbers(const std::string& input) {
+	VEC_OF_STR numbers;
+	std::stringstream ss(input);
+	std::string token;
+
+	while (ss >> token) {
+		bool isNumber = true;
+
+		// Ellenõrzés, hogy a token csak számokat tartalmaz-e
+		for (char c : token) {
+			if (!std::isdigit(c)) {
+				isNumber = false;
+				break;
+			}
+		}
+
+		if (isNumber) {
+			numbers.push_back(token);
+		}
+	}
+
+	return numbers;
+}
+
 AOC2023_FN(day1_1) {
 	const char* digits = "0123456789";
-	std::size_t sum = 0;
+	size_t sum = 0;
 	for(auto line : input){
 		uint16_t first_digit = (line[line.find_first_of(digits)] - '0');
 		uint16_t last_digit = (line[line.find_last_of(digits)] - '0');
@@ -184,4 +218,163 @@ AOC2023_FN(day2_2) {
 		res += score["blue"]*score["green"]*score["red"];
 	}
 	return res;
+}
+
+AOC2023_FN(day3_1) {
+	const size_t width = input[0].length();
+	const size_t height = input.size();
+	uint32_t res = 0;
+
+	std::vector<uint32_t> symbol_pos;
+	const char* symbols = " !\"#$%&\'()*+,-/:;<=>?[\\]^_`{|}~";
+	const uint16_t symbols_count = 32;
+
+	std::unordered_map<uint32_t, uint32_t> pos_num;
+
+	int32_t i = 0;
+	for (auto line : input) {
+		for (uint32_t c = 0; c < line.length(); c++) {
+			uint32_t l = 0;
+			while (l < symbols_count && line[c] != symbols[l++]);
+			if (l < symbols_count) {
+				symbol_pos.push_back(i);
+			}
+			i++;
+		}
+	}
+	
+	i = 0;
+	for (auto line : input) {
+		for (uint32_t c = 0; c < line.length(); c++) {
+			if (isdigit(line[c])) {
+				uint32_t num = 0;
+				uint32_t cnt = 0;
+				while (c < line.length() && isdigit(line[c])) {
+					num = num * 10 + (line[c] - '0');
+					c++;
+					i++;
+					cnt++;
+				}
+				for (uint32_t m = 0; m < cnt; m++) {
+					int v = i - m - 1;
+					pos_num[v] = num;
+				}
+			}
+			i++;
+		}
+	}
+
+	
+	for (auto sym_p : symbol_pos) {
+		size_t x = sym_p % width;
+		size_t y = sym_p / height;
+		std::unordered_set<uint32_t> nums;
+		for (int32_t j = -1; j < 2; j++) {
+			for (int32_t k = -1; k < 2; k++) {
+				size_t m = (y + j) * width + x + k;
+				nums.insert(pos_num[(unsigned int)m]);
+			}
+		}
+		for (auto num : nums) {
+			res += num;
+		}
+	}
+	return res;
+}
+
+uint32_t day4_1_score_counter(uint32_t prev_score) {
+	if (prev_score == 0) {
+		return 1;
+	}
+	else {
+		return 2 * prev_score;
+	}
+}
+
+
+
+AOC2023_FN(day4_1) {
+	std::unordered_map<std::string, bool> map;
+
+	int total_result = 0;
+	int inner_score;
+	
+	VEC_OF_STR card;
+	VEC_OF_STR nums;
+	VEC_OF_STR winning_nums;
+	VEC_OF_STR our_nums;
+
+	for (auto line : input) {
+		map.clear();
+		inner_score = 0;
+		
+		card = split_string(line, ':');
+		nums = split_string(card[1], '|');
+		winning_nums = split_numbers(nums[0]);
+		our_nums = split_numbers(nums[1]);
+		
+		for (auto n : winning_nums) {
+			if(std::stoi(n))
+			map[n] = true;
+		}
+		
+		for (auto n : our_nums) {
+			if (map[n]) {
+				inner_score = day4_1_score_counter(inner_score);
+			}
+		}
+		total_result += inner_score;
+	}
+	return total_result;
+}
+
+AOC2023_FN(day4_2) {
+	std::unordered_map<std::string, bool> map;
+
+	// Map for store the number of each card
+	std::unordered_map<int, int> dups;
+
+	int number_of_win_number;
+
+	VEC_OF_STR card;
+	VEC_OF_STR nums;
+	VEC_OF_STR winning_nums;
+	VEC_OF_STR our_nums;
+
+	// Init each of the cards number to 1
+	for (int i = 0; i < input.size(); i++) {
+		dups[i] = 1;
+	}
+
+	for (int i = 0; i < input.size(); i++) {
+		auto line = input[i];
+		map.clear();
+		number_of_win_number = 0;
+
+		card = split_string(line, ':');
+		nums = split_string(card[1], '|');
+		winning_nums = split_numbers(nums[0]);
+		our_nums = split_numbers(nums[1]);
+		for (auto n : winning_nums) {
+			if (std::stoi(n))
+				map[n] = true;
+		}
+
+		for (auto n : our_nums) {
+			if (map[n]) {
+				number_of_win_number++;
+			}
+		}
+
+		// Add the dups[i] amount of card to the "number_of_win_number" next card
+		for (int j = 0; j < number_of_win_number && j+i+1 < input.size(); j++) {
+			dups[j + i + 1] += dups[i];
+		}
+	}
+
+	int result = 0;
+	for (int i = 0; i < input.size(); i++) {
+		result += dups[i];
+	}
+	return result;
 }
