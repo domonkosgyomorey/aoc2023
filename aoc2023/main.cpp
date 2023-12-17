@@ -30,6 +30,7 @@ AOC2023_FN(day5_1);
 AOC2023_FN(day5_2);
 AOC2023_FN(day6_1);
 AOC2023_FN(day6_2);
+AOC2023_FN(day7_1);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
@@ -42,7 +43,8 @@ int main(int argc, char** argv) {
 	//std::cout << day5_1(read_file("day5_1.txt")) << std::endl;
 	//std::cout << day5_2(read_file("day5_2.txt")) << std::endl;
 	//std::cout << day6_1(read_file("day6_1.txt")) << std::endl;
-	std::cout << day6_2(read_file("day6_2.txt")) << std::endl;
+	//std::cout << day6_2(read_file("day6_2.txt")) << std::endl;
+	std::cout << day7_1(read_file("day7_1.txt")) << std::endl;
 	return 0;
 }
 
@@ -581,6 +583,93 @@ AOC2023_FN(day6_2) {
 		possible_states_count += (i * (time_cap - i) > record_distance);
 
 	return possible_states_count;
+}
+
+#pragma endregion
+
+#pragma region Day7
+
+AOC2023_FN(day7_1) {
+	size_t result = 0;
+
+	const uint32_t hand_type_len = 7;
+	std::vector<std::pair<std::string, size_t>> type_of_hand_and_bid[hand_type_len];
+	static std::string strength_order = "AKQJT98765432";
+	int hand_count = input.size();
+
+	for (auto line : input) {
+		std::unordered_map<char, size_t> card_count;
+		VEC_OF_STR splitted_input = split_string(line, ' ');
+		std::string hand = splitted_input[0];
+		size_t bid = string_to_number(splitted_input[1]);
+		
+		for (auto c : hand) {
+			if (card_count.contains(c)) {
+				card_count[c]++;
+			} else {
+				card_count[c] = 1;
+			}
+		}
+
+		bool five = false, four = false, three = false;
+		size_t pair_cntr = 0;
+		for (auto pair : card_count) {
+			switch (pair.second) {
+			case 5:
+				five = true;
+				break;
+			case 4:
+				four = true;
+				break;
+			case 3:
+				three = true;
+				break;
+			case 2:
+				pair_cntr++;
+				break;
+			default:
+				break;
+			}
+		}
+		if (five) {
+			type_of_hand_and_bid[0].push_back(std::make_pair(hand, bid));
+		}
+		else if (four) {
+			type_of_hand_and_bid[1].push_back(std::make_pair(hand, bid));
+		}
+		else if (three && pair_cntr > 0) {
+			type_of_hand_and_bid[2].push_back(std::make_pair(hand, bid));
+		}
+		else if (three) {
+			type_of_hand_and_bid[3].push_back(std::make_pair(hand, bid));
+		}
+		else if (pair_cntr > 1) {
+			type_of_hand_and_bid[4].push_back(std::make_pair(hand, bid));
+		}
+		else if (pair_cntr > 0) {
+			type_of_hand_and_bid[5].push_back(std::make_pair(hand, bid));
+		}
+		else {
+			type_of_hand_and_bid[6].push_back(std::make_pair(hand, bid));
+		}
+	}
+
+	for (size_t i = 0; i < hand_type_len; i++) {
+		std::sort(type_of_hand_and_bid[i].begin(), type_of_hand_and_bid[i].end(), [](std::pair<std::string, size_t>& a, std::pair<std::string, size_t>& b) {
+			for (int j = 0; j < a.first.length() && j < b.first.length(); j++) {
+				if (a.first[j] != b.first[j]) {
+					return strength_order.find(a.first[j]) < strength_order.find(b.first[j]);
+				}
+			}
+			return a.first.length() < b.first.length();
+		});
+		for (auto bid : type_of_hand_and_bid[i]) {
+			result += (hand_count * bid.second);
+			hand_count--;
+		}
+	}
+
+	return result;
 }
 
 #pragma endregion

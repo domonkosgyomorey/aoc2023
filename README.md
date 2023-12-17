@@ -11,3 +11,4 @@ Learn C++ by solving problems
 |4|✅|✅|
 |5|✅|TODO: Handle extreme amount of input|
 |6|✅|✅|
+|7|✅|❌|
