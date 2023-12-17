@@ -220,6 +220,7 @@ AOC2023_FN(day2_2) {
 	return res;
 }
 
+// TODO: Something is not okay in logicly yet
 AOC2023_FN(day3_1) {
 	const size_t width = input[0].length();
 	const size_t height = input.size();
@@ -290,8 +291,6 @@ uint32_t day4_1_score_counter(uint32_t prev_score) {
 		return 2 * prev_score;
 	}
 }
-
-
 
 AOC2023_FN(day4_1) {
 	std::unordered_map<std::string, bool> map;
