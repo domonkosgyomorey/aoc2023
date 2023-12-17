@@ -137,6 +137,7 @@
     <Text Include="day3_1.txt" />
     <Text Include="day4_1.txt" />
     <Text Include="day4_2.txt" />
+    <Text Include="day5_1.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

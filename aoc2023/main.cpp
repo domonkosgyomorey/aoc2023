@@ -15,6 +15,7 @@ VEC_OF_STR split_string(const std::string& s, char delimiter);
 VEC_OF_STR read_file(const char* file_path);
 std::string ltrim(const std::string& s);
 VEC_OF_STR split_numbers(const std::string& input);
+
 AOC2023_FN(day1_1);
 AOC2023_FN(day1_2);
 AOC2023_FN(day2_1);
@@ -22,6 +23,7 @@ AOC2023_FN(day2_2);
 AOC2023_FN(day3_1);
 AOC2023_FN(day4_1);
 AOC2023_FN(day4_2);
+AOC2023_FN(day5_1);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
@@ -30,7 +32,8 @@ int main(int argc, char** argv) {
 	//std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
 	// TODO: correct some miss calculations std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
 	//std::cout << day4_1(read_file("day4_1.txt")) << std::endl;
-	std::cout << day4_2(read_file("day4_2.txt")) << std::endl;
+	//std::cout << day4_2(read_file("day4_2.txt")) << std::endl;
+	std::cout << day5_1(read_file("day5_1.txt")) << std::endl;
 	return 0;
 }
 
@@ -104,6 +107,8 @@ VEC_OF_STR split_numbers(const std::string& input) {
 	return numbers;
 }
 
+#pragma region Day1
+
 AOC2023_FN(day1_1) {
 	const char* digits = "0123456789";
 	size_t sum = 0;
@@ -114,7 +119,6 @@ AOC2023_FN(day1_1) {
 	}
 	return sum;
 }
-
 
 // TODO: Something is wrong somewhere in my logic
 AOC2023_FN(day1_2) {
@@ -166,6 +170,10 @@ AOC2023_FN(day1_2) {
 
 	return day1_1(transformed_input);
 }
+
+#pragma endregion
+
+#pragma region Day2
 
 AOC2023_FN(day2_1) {
 	int res = 0;
@@ -220,6 +228,9 @@ AOC2023_FN(day2_2) {
 	return res;
 }
 
+#pragma endregion
+
+#pragma region Day3
 // TODO: Something is not okay in logicly yet
 AOC2023_FN(day3_1) {
 	const size_t width = input[0].length();
@@ -283,6 +294,9 @@ AOC2023_FN(day3_1) {
 	return res;
 }
 
+#pragma endregion
+
+#pragma region Day4
 uint32_t day4_1_score_counter(uint32_t prev_score) {
 	if (prev_score == 0) {
 		return 1;
@@ -377,3 +391,90 @@ AOC2023_FN(day4_2) {
 	}
 	return result;
 }
+
+#pragma endregion Day4
+
+#pragma region Day5
+
+size_t string_to_number(std::string num) {
+	size_t i = 0;
+	size_t res = 0;
+	while (isdigit(num[i])) {
+		res = res * 10 + (num[i] - '0');
+		i++;
+	}
+	return res;
+}
+
+typedef struct Mapping {
+	size_t src;
+	size_t dst;
+	size_t range;
+
+	Mapping(std::string line) {
+		VEC_OF_STR nums = split_numbers(line);
+		dst = string_to_number(nums[0]);
+		src = string_to_number(nums[1]);
+		range = string_to_number(nums[2]);
+	}
+
+} Mapping;
+
+int day5_1_mapping_from_ranges(const std::vector<Mapping> &mappings, long value) {
+	for (auto mapping : mappings) {
+		if (mapping.src <= value && value < mapping.src + mapping.range) {
+			return value + (mapping.dst - mapping.src);
+		}
+	}
+	return value;
+}
+
+AOC2023_FN(day5_1) {
+
+	// seed -> soil -> fertilizer -> water -> light -> temperature -> humidity -> location
+	const size_t mapping_process_len = 7;
+	std::vector<Mapping> mappings[mapping_process_len];
+
+	// dst src range
+	const size_t convert_param_len = 3;
+
+	std::vector<size_t> seeds;
+	// seeds: 50, 12, ...
+	for (auto seed : split_numbers(input[0])) {
+		seeds.push_back(string_to_number(seed));
+	}
+
+	// Converting state id
+	size_t process_id = 0;
+	for (size_t i = 3; i < input.size(); i++) {
+		auto line = input[i];
+		if (line.empty()) {
+			process_id++;
+			// To skip the empty line, and the next convert label
+			i += 2;
+			if (i >= input.size()) {
+				std::cout << "The input format assumption was wrong" << std::endl;
+				exit(-1);
+			}
+			line = input[i];
+		}
+
+		Mapping mapping(line);
+		mappings[process_id].push_back(mapping);
+	}
+
+	size_t min_location = -1;
+	for (auto seed : seeds) {
+		// Feedforward the seed
+		for (auto convert_state : mappings) {
+			seed = day5_1_mapping_from_ranges(convert_state, seed);
+		}
+		// Store the minimum location value
+		if (seed < min_location || min_location == -1) {
+			min_location = seed;
+		}
+	}
+	return min_location;
+}
+
+#pragma endregion
