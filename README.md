@@ -12,3 +12,4 @@ Learn C++ by solving problems
 |5|✅|TODO: Handle extreme amount of input|
 |6|✅|✅|
 |7|✅|❌|
+|8|✅|TODO: So slow (optimize later)|
