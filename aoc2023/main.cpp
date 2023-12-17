@@ -15,36 +15,48 @@
 VEC_OF_STR split_string(const std::string& s, char delimiter);
 VEC_OF_STR read_file(const char* file_path);
 std::string ltrim(const std::string& s);
+std::string trim(std::string& str, const char* spec_char_set);
 size_t convert_digits_to_number(const std::string& s);
 VEC_OF_STR split_numbers(const std::string& input);
 size_t string_to_number(std::string num);
 
 AOC2023_FN(day1_1);
 AOC2023_FN(day1_2);
+
 AOC2023_FN(day2_1);
 AOC2023_FN(day2_2);
+
 AOC2023_FN(day3_1);
+
 AOC2023_FN(day4_1);
 AOC2023_FN(day4_2);
+
 AOC2023_FN(day5_1);
 AOC2023_FN(day5_2);
+
 AOC2023_FN(day6_1);
 AOC2023_FN(day6_2);
+
 AOC2023_FN(day7_1);
+
+AOC2023_FN(day8_1);
+AOC2023_FN(day8_2);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
 	//std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
 	//std::cout << day2_1(read_file("day2_1.txt")) << std::endl;
 	//std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
-	// TODO: correct some miss calculations std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
+	//std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
 	//std::cout << day4_1(read_file("day4_1.txt")) << std::endl;
 	//std::cout << day4_2(read_file("day4_2.txt")) << std::endl;
 	//std::cout << day5_1(read_file("day5_1.txt")) << std::endl;
 	//std::cout << day5_2(read_file("day5_2.txt")) << std::endl;
 	//std::cout << day6_1(read_file("day6_1.txt")) << std::endl;
 	//std::cout << day6_2(read_file("day6_2.txt")) << std::endl;
-	std::cout << day7_1(read_file("day7_1.txt")) << std::endl;
+	//std::cout << day7_1(read_file("day7_1.txt")) << std::endl;
+	//std::cout << day8_1(read_file("day8_1.txt")) << std::endl;
+	std::cout << day8_2(read_file("day8_2.txt")) << std::endl;
 	return 0;
 }
 
@@ -92,6 +104,18 @@ std::string ltrim(const std::string& s) {
 	}
 
 	return "";
+}
+
+std::string trim(std::string& str ,const char* spec_char_set) {
+	std::string cs = " \t\r\n";
+	cs.append(spec_char_set);
+	size_t start = str.find_first_not_of(cs);
+	if (start == std::string::npos) {
+		return "";
+	}
+
+	size_t end = str.find_last_not_of(cs);
+	return str.substr(start, end - start + 1);
 }
 
 size_t convert_digits_to_number(const std::string& s) {
@@ -423,7 +447,7 @@ AOC2023_FN(day4_2) {
 	return result;
 }
 
-#pragma endregion Day4
+#pragma endregion
 
 #pragma region Day5
 
@@ -595,7 +619,7 @@ AOC2023_FN(day7_1) {
 	const uint32_t hand_type_len = 7;
 	std::vector<std::pair<std::string, size_t>> type_of_hand_and_bid[hand_type_len];
 	static std::string strength_order = "AKQJT98765432";
-	int hand_count = input.size();
+	size_t hand_count = input.size();
 
 	for (auto line : input) {
 		std::unordered_map<char, size_t> card_count;
@@ -670,6 +694,106 @@ AOC2023_FN(day7_1) {
 	}
 
 	return result;
+}
+
+#pragma endregion
+
+
+#pragma region Day8
+
+AOC2023_FN(day8_1) {
+	std::string instruction = input[0];
+
+	const char L = 0;
+	const char R = 1;
+
+	// Lookup table
+	std::unordered_map<std::string, size_t> mapping;
+	std::vector<std::pair<std::string, std::string>> left_right_for_each_row;
+
+	// i=2 ===> skip the instructions and the empty line
+	for (int i = 2; i < input.size(); i++) {
+		std::string line = input[i];
+		VEC_OF_STR part = split_string(line, '=');
+		mapping[trim(part[0], "")] = i - 2;	// cause the padding
+		VEC_OF_STR params = split_string(trim(part[1], "()"), ',');
+		left_right_for_each_row.push_back(std::make_pair(params[0], trim(params[1], "")));
+	}
+	/**/
+	std::string cursor = "AAA";
+	size_t counter = 0;
+	while (cursor != "ZZZ") {
+		for (auto c : instruction) {
+			if (c == 'L') {
+				cursor = left_right_for_each_row[mapping[cursor]].first;
+			}
+			else {
+				cursor = left_right_for_each_row[mapping[cursor]].second;
+			}
+			counter++;
+			if (cursor == "ZZZ") {
+				break;
+			}
+		}
+	}
+	return counter;
+}
+
+// TODO: So Slow
+AOC2023_FN(day8_2) {
+	std::string instruction = input[0];
+
+	const char L = 0;
+	const char R = 1;
+
+	// Lookup table
+	std::unordered_map<std::string, size_t> mapping;
+	std::vector<std::pair<std::string, std::string>> left_right_for_each_row;
+
+	VEC_OF_STR starts;
+
+	// i=2 ===> skip the instructions and the empty line
+	for (int i = 2; i < input.size(); i++) {
+		std::string line = input[i];
+		VEC_OF_STR part = split_string(line, '=');
+		part[0] = trim(part[0], "");
+		mapping[part[0]] = i - 2;	// cause the padding
+		if (part[0][2] == 'A') {
+			starts.push_back(part[0]);
+		}
+		VEC_OF_STR params = split_string(trim(part[1], "()"), ',');
+		left_right_for_each_row.push_back(std::make_pair(params[0], trim(params[1], "")));
+	}
+	size_t counter = 0;
+	while (true) {
+		for (auto c : instruction) {
+			if (c == 'L') {
+				for (int i = 0; i < starts.size(); i++) {
+					starts[i] = left_right_for_each_row[mapping[starts[i]]].first;
+				}
+			}
+			else {
+				for (int i = 0; i < starts.size(); i++) {
+					starts[i] = left_right_for_each_row[mapping[starts[i]]].second;
+				}
+			}
+			counter++;
+			bool exit = true;
+			for (int i = 0; i < starts.size(); i++) {
+				if (starts[i][2] != 'Z') {
+					exit = false;
+					break;
+				}
+			}
+			if (exit) {
+				return counter;
+			}
+		}
+		if (!(counter % 100000)) {
+			std::cout << counter << std::endl;
+		}
+	}
+	return counter;
 }
 
 #pragma endregion
