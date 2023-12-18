@@ -56,6 +56,24 @@
     <Text Include="day7_1.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="day8_1.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="day8_2.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="day9_1.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="day9_2.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="day10_1.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="day11_1.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

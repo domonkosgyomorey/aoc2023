@@ -14,3 +14,5 @@ Learn C++ by solving problems
 |7|✅|❌|
 |8|✅|TODO: So slow (optimize later)|
 |9|✅|✅|
+|10|❌|❌|
+|11|✅|❌|

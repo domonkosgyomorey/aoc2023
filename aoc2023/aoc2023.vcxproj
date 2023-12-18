@@ -131,6 +131,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Text Include="day10_1.txt" />
+    <Text Include="day11_1.txt" />
     <Text Include="day1_1.txt" />
     <Text Include="day1_2.txt" />
     <Text Include="day2_1.txt" />

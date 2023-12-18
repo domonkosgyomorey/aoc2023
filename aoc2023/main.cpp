@@ -8,10 +8,15 @@
 #include <sstream>
 #include <cctype>
 #include <thread>
+#include <queue>
 
 #define AOC2023_FN(fn_name) size_t (fn_name)(std::vector<std::string> input)
 #define AOC2023_SFN(fn_name) int64_t (fn_name)(std::vector<std::string> input)
 #define VEC_OF_STR std::vector<std::string>
+#define PAIR std::pair<size_t, size_t>
+#define VEC_OF_PAIR std::vector<PAIR>
+
+#pragma region UtilsDefinition
 
 VEC_OF_STR split_string(const std::string& s, char delimiter);
 VEC_OF_STR read_file(const char* file_path);
@@ -20,6 +25,10 @@ std::string trim(std::string& str, const char* spec_char_set);
 size_t convert_digits_to_number(const std::string& s);
 VEC_OF_STR split_numbers(const std::string& input);
 size_t string_to_number(std::string num);
+
+#pragma endregion
+
+#pragma region FunctionDefinitions
 
 AOC2023_FN(day1_1);
 AOC2023_FN(day1_2);
@@ -46,6 +55,14 @@ AOC2023_FN(day8_2);
 AOC2023_FN(day9_1);
 AOC2023_SFN(day9_2);
 
+AOC2023_FN(day10_1);
+AOC2023_FN(day10_2);
+
+AOC2023_FN(day11_1);
+AOC2023_FN(day11_2);
+
+#pragma endregion
+
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
 	//std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
@@ -62,9 +79,13 @@ int main(int argc, char** argv) {
 	//std::cout << day8_1(read_file("day8_1.txt")) << std::endl;
 	//std::cout << day8_2(read_file("day8_2.txt")) << std::endl;
 	//std::cout << day9_1(read_file("day9_1.txt")) << std::endl;
-	std::cout << day9_2(read_file("day9_2.txt")) << std::endl;
+	//std::cout << day9_2(read_file("day9_2.txt")) << std::endl;
+	std::cout << day10_1(read_file("day10_1.txt")) << std::endl;
+	//std::cout << day11_1(read_file("day11_1.txt")) << std::endl;
 	return 0;
 }
+
+#pragma region Utils
 
 VEC_OF_STR split_string(const std::string& s, char delimiter) {
 	VEC_OF_STR tokens;
@@ -78,7 +99,6 @@ VEC_OF_STR split_string(const std::string& s, char delimiter) {
 	tokens.push_back(s.substr(start));
 	return tokens;
 }
-
 
 VEC_OF_STR read_file(const char* file_path) {
 	
@@ -168,6 +188,8 @@ size_t string_to_number(std::string num) {
 	}
 	return res*(neg?-1:1);
 }
+
+#pragma endregion
 
 #pragma region Day1
 
@@ -898,6 +920,182 @@ AOC2023_SFN(day9_2) {
 		result += rows[0][0];
 	}
 	return result;
+}
+
+#pragma endregion
+
+#pragma region Day10
+
+struct Graph {
+	std::unordered_map<size_t, std::vector<size_t>> adjacency_list;
+
+	void addEdge(size_t u, size_t v) {
+		adjacency_list[u].push_back(v);
+	}
+
+	std::unordered_map<size_t, size_t> BFS(size_t start) {
+		std::unordered_map<size_t, size_t> distances;
+		std::queue<size_t> q;
+		std::vector<size_t> f;
+
+		q.push(start);
+		distances[start] = 0;
+
+		while (!q.empty()) {
+			size_t current = q.front();
+			q.pop();
+
+			for (size_t neighbor : adjacency_list[current]) {
+				bool found = false;
+				for (int i = 0; i < f.size(); i++) {
+					if (f[i] == neighbor) {
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					q.push(neighbor);
+					distances[neighbor] = distances[current] + 1;
+					f.push_back(neighbor);
+				}
+			}
+		}
+
+		return distances;
+	}
+};
+
+
+AOC2023_FN(day10_1) {
+
+	size_t start = {0};
+
+	Graph graph;
+
+	for (size_t i = 0; i < input.size(); i++) {
+		std::string& line = input.at(i);
+		for (size_t j = 0; j < line.size(); j++) {
+			size_t idx = i * line.length()+j;
+			switch (line[j]) {
+			case 'S':
+				start = idx;
+				graph.addEdge(idx, idx - input.size());
+				graph.addEdge(idx, idx + input.size());
+				graph.addEdge(idx, idx - 1);
+				graph.addEdge(idx, idx + 1);
+				break;
+			case '|':
+				graph.addEdge(idx, idx-input.size());
+				graph.addEdge(idx, idx+input.size());
+				break;
+			case '-':
+				graph.addEdge(idx, idx-1);
+				graph.addEdge(idx, idx+1);
+				break;
+			case 'L':
+				graph.addEdge(idx, idx+1);
+				graph.addEdge(idx, idx-input.size());
+				break;
+			case 'J':
+				graph.addEdge(idx, idx-1);
+				graph.addEdge(idx, idx - input.size());
+				break;
+			case '7':
+				graph.addEdge(idx, idx - 1);
+				graph.addEdge(idx, idx + input.size());
+				break;
+				break;
+			case 'F':
+				graph.addEdge(idx, idx + 1);
+				graph.addEdge(idx, idx + input.size());
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	std::unordered_map<size_t, size_t> result = graph.BFS(start);
+	size_t max_dist = 0;
+	for (auto pair : result) {
+		if (graph.adjacency_list[pair.first].size() != 2) {
+			continue;
+		}
+		// We know, each node must have just 2 neighbour
+		size_t neigh1_dist = result[graph.adjacency_list[pair.first][0]];
+		size_t neigh2_dist = result[graph.adjacency_list[pair.first][1]];
+		if (neigh1_dist <= pair.second && neigh2_dist <= pair.second) {
+			max_dist = pair.second;
+		}
+	}
+	return max_dist;
+}
+
+#pragma endregion
+
+#pragma region Day11
+
+AOC2023_FN(day11_1) {
+	std::vector<char> empty_col;
+	
+	VEC_OF_STR expanded_univierse;
+
+	size_t num_of_galaxy = 0;
+	std::unordered_map<size_t, PAIR> galaxy_lookup;
+	
+	for (size_t i = 0; i < input[0].length(); i++) {
+		empty_col.push_back(1);
+	}
+	for (size_t i = 0; i < input.size(); i++) {
+		std::string line = input[i];
+		size_t j = 0;
+		bool good = false;
+		for (; j < line.length(); j++) {
+			empty_col[j] *= (line[j] == '.');
+			if (line[j] != '.') {
+				good = true;
+			}
+		}
+		expanded_univierse.push_back(line);
+		if (!good) {
+			expanded_univierse.push_back(line);
+		}
+	}
+	for (int j = empty_col.size()-1; j >= 0; j--) {
+		for (size_t i = 0; i < expanded_univierse.size(); i++) {
+			std::string& line = expanded_univierse[i];
+			if (empty_col[j]) {
+				line.insert(j, ".");
+			}
+		}
+	}
+	
+	for (int i = 0; i < expanded_univierse.size(); i++) {
+		for (int j = 0; j < expanded_univierse[i].size(); j++) {
+			if (expanded_univierse[i][j] == '#') {
+				galaxy_lookup[num_of_galaxy++] = std::make_pair(i, j);
+			}
+		}
+	}
+
+	int k = 1;
+	for (auto l : expanded_univierse) {
+		for (auto c : l) {
+			std::cout << c;
+		}
+		std::cout << std::endl;
+	}
+
+	size_t res = 0;
+	for (int i = 0; i < num_of_galaxy-1; i++) {
+		for (int j = i+1; j < num_of_galaxy; j++) {
+			PAIR f = galaxy_lookup[i];
+			PAIR s = galaxy_lookup[j];
+			res += (llabs(f.first - s.first) + llabs(f.second - s.second));
+			
+		}
+	}
+	return res;
 }
 
 #pragma endregion
