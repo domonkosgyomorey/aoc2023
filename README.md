@@ -7,7 +7,7 @@ Learn C++ by solving problems
 |:---:|:---:|:---:|
 |1|✅|TODO: Some logic is not correct|
 |2|✅|✅|
-|3|TODO: Re thinking the problem|❌|
+|3|✅|✅|
 |4|✅|✅|
 |5|✅|TODO: Handle extreme amount of input|
 |6|✅|✅|

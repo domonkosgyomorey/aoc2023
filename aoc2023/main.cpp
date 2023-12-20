@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <set>
 #include <algorithm>
 #include <sstream>
 #include <cctype>
@@ -37,6 +38,7 @@ AOC2023_FN(day2_1);
 AOC2023_FN(day2_2);
 
 AOC2023_FN(day3_1);
+AOC2023_FN(day3_2);
 
 AOC2023_FN(day4_1);
 AOC2023_FN(day4_2);
@@ -69,6 +71,7 @@ int main(int argc, char** argv) {
 	//std::cout << day2_1(read_file("day2_1.txt")) << std::endl;
 	//std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
 	//std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
+	//std::cout << day3_2(read_file("day3_2.txt")) << std::endl;
 	//std::cout << day4_1(read_file("day4_1.txt")) << std::endl;
 	//std::cout << day4_2(read_file("day4_2.txt")) << std::endl;
 	//std::cout << day5_1(read_file("day5_1.txt")) << std::endl;
@@ -80,7 +83,7 @@ int main(int argc, char** argv) {
 	//std::cout << day8_2(read_file("day8_2.txt")) << std::endl;
 	//std::cout << day9_1(read_file("day9_1.txt")) << std::endl;
 	//std::cout << day9_2(read_file("day9_2.txt")) << std::endl;
-	std::cout << day10_1(read_file("day10_1.txt")) << std::endl;
+	//std::cout << day10_1(read_file("day10_1.txt")) << std::endl;
 	//std::cout << day11_1(read_file("day11_1.txt")) << std::endl;
 	return 0;
 }
@@ -315,67 +318,113 @@ AOC2023_FN(day2_2) {
 #pragma endregion
 
 #pragma region Day3
-// TODO: Something is not okay in logicly yet
 AOC2023_FN(day3_1) {
-	const size_t width = input[0].length();
-	const size_t height = input.size();
-	uint32_t res = 0;
 
-	std::vector<uint32_t> symbol_pos;
-	const char* symbols = " !\"#$%&\'()*+,-/:;<=>?[\\]^_`{|}~";
-	const uint16_t symbols_count = 32;
+	const std::string empty_line = std::string(input[0].size(), '.');
+	std::unordered_map<size_t, size_t> coord_to_num;
+	std::vector<PAIR> symbols_pos;
+	std::set<size_t> sym_nums;
+	size_t result = 0;
 
-	std::unordered_map<uint32_t, uint32_t> pos_num;
-
-	int32_t i = 0;
-	for (auto line : input) {
-		for (uint32_t c = 0; c < line.length(); c++) {
-			uint32_t l = 0;
-			while (l < symbols_count && line[c] != symbols[l++]);
-			if (l < symbols_count) {
-				symbol_pos.push_back(i);
-			}
-			i++;
-		}
+	input.insert(input.begin(), empty_line);
+	input.push_back(empty_line);
+	for (size_t i = 0; i < input.size(); i++) {
+		input[i].push_back('.');
+		input[i].insert(0, ".");
 	}
-	
-	i = 0;
-	for (auto line : input) {
-		for (uint32_t c = 0; c < line.length(); c++) {
-			if (isdigit(line[c])) {
-				uint32_t num = 0;
-				uint32_t cnt = 0;
-				while (c < line.length() && isdigit(line[c])) {
-					num = num * 10 + (line[c] - '0');
-					c++;
-					i++;
-					cnt++;
-				}
-				for (uint32_t m = 0; m < cnt; m++) {
-					int v = i - m - 1;
-					pos_num[v] = num;
-				}
+
+	for (size_t i = 0; i < input.size(); i++) {
+		for (size_t j = 0; j < input[0].length(); j++) {
+			size_t num = 0;
+			size_t cnt = 0;
+			while (j+cnt<input[0].length() && isdigit(input[i][j + cnt])) {
+				num = num * 10 + (input[i][j+cnt] - '0');
+				cnt++;
 			}
-			i++;
+			for (int k = 0; k < cnt; k++) {
+				size_t idx = i * input[0].length() + j;
+				coord_to_num[idx] = num;
+				j++;
+			}
+			if (input[i][j] != '.' && !isdigit(input[i][j])) {
+				symbols_pos.push_back(std::make_pair(i, j));
+			}
 		}
 	}
 
-	
-	for (auto sym_p : symbol_pos) {
-		size_t x = sym_p % width;
-		size_t y = sym_p / height;
-		std::unordered_set<uint32_t> nums;
+
+	for (PAIR sym_pos : symbols_pos) {
+		sym_nums.clear();
 		for (int32_t j = -1; j < 2; j++) {
 			for (int32_t k = -1; k < 2; k++) {
-				size_t m = (y + j) * width + x + k;
-				nums.insert(pos_num[(unsigned int)m]);
+				size_t idx = (sym_pos.first + j) * input[0].length() + sym_pos.second + k;
+				if (coord_to_num.find(idx) != coord_to_num.end()) {
+					sym_nums.insert(coord_to_num[idx]);
+				}
 			}
 		}
-		for (auto num : nums) {
-			res += num;
+		for (size_t num : sym_nums) {
+			result += num;
 		}
 	}
-	return res;
+
+	return result;
+}
+
+AOC2023_FN(day3_2) {
+	const std::string empty_line = std::string(input[0].size(), '.');
+	std::unordered_map<size_t, size_t> coord_to_num;
+	std::vector<PAIR> symbols_pos;
+	std::set<size_t> sym_nums;
+	size_t result = 0;
+
+	input.insert(input.begin(), empty_line);
+	input.push_back(empty_line);
+	for (size_t i = 0; i < input.size(); i++) {
+		input[i].push_back('.');
+		input[i].insert(0, ".");
+	}
+
+	for (size_t i = 0; i < input.size(); i++) {
+		for (size_t j = 0; j < input[0].length(); j++) {
+			size_t num = 0;
+			size_t cnt = 0;
+			while (j + cnt < input[0].length() && isdigit(input[i][j + cnt])) {
+				num = num * 10 + (input[i][j + cnt] - '0');
+				cnt++;
+			}
+			for (int k = 0; k < cnt; k++) {
+				size_t idx = i * input[0].length() + j;
+				coord_to_num[idx] = num;
+				j++;
+			}
+			if (input[i][j] == '*') {
+				symbols_pos.push_back(std::make_pair(i, j));
+			}
+		}
+	}
+
+
+	for (PAIR sym_pos : symbols_pos) {
+		sym_nums.clear();
+		for (int32_t j = -1; j < 2; j++) {
+			for (int32_t k = -1; k < 2; k++) {
+				size_t idx = (sym_pos.first + j) * input[0].length() + sym_pos.second + k;
+				if (coord_to_num.find(idx) != coord_to_num.end()) {
+					sym_nums.insert(coord_to_num[idx]);
+				}
+			}
+		}
+		if (sym_nums.size() == 2) {
+			size_t inner_result = 1;
+			for (auto num : sym_nums) {
+				inner_result *= num;
+			}
+			result += inner_result;
+		}
+	}
+
+	return result;
 }
 
 #pragma endregion
@@ -1061,7 +1110,7 @@ AOC2023_FN(day11_1) {
 			expanded_univierse.push_back(line);
 		}
 	}
-	for (int j = empty_col.size()-1; j >= 0; j--) {
+	for (size_t j = empty_col.size()-1; j >= 0; j--) {
 		for (size_t i = 0; i < expanded_univierse.size(); i++) {
 			std::string& line = expanded_univierse[i];
 			if (empty_col[j]) {
@@ -1070,25 +1119,17 @@ AOC2023_FN(day11_1) {
 		}
 	}
 	
-	for (int i = 0; i < expanded_univierse.size(); i++) {
-		for (int j = 0; j < expanded_univierse[i].size(); j++) {
+	for (size_t i = 0; i < expanded_univierse.size(); i++) {
+		for (size_t j = 0; j < expanded_univierse[i].size(); j++) {
 			if (expanded_univierse[i][j] == '#') {
 				galaxy_lookup[num_of_galaxy++] = std::make_pair(i, j);
 			}
 		}
 	}
 
-	int k = 1;
-	for (auto l : expanded_univierse) {
-		for (auto c : l) {
-			std::cout << c;
-		}
-		std::cout << std::endl;
-	}
-
 	size_t res = 0;
-	for (int i = 0; i < num_of_galaxy-1; i++) {
-		for (int j = i+1; j < num_of_galaxy; j++) {
+	for (size_t i = 0; i < num_of_galaxy-1; i++) {
+		for (size_t j = i+1; j < num_of_galaxy; j++) {
 			PAIR f = galaxy_lookup[i];
 			PAIR s = galaxy_lookup[j];
 			res += (llabs(f.first - s.first) + llabs(f.second - s.second));
