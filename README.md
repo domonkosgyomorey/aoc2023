@@ -11,7 +11,7 @@ Learn C++ by solving problems
 |4|✅|✅|
 |5|✅|TODO: Handle extreme amount of input|
 |6|✅|✅|
-|7|✅|❌|
+|7|✅|TODO: Something doesn't work, but right now I cant figure it out.|
 |8|✅|TODO: So slow (optimize later)|
 |9|✅|✅|
 |10|❌|❌|

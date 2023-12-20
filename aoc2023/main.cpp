@@ -50,6 +50,7 @@ AOC2023_FN(day6_1);
 AOC2023_FN(day6_2);
 
 AOC2023_FN(day7_1);
+AOC2023_FN(day7_2);
 
 AOC2023_FN(day8_1);
 AOC2023_FN(day8_2);
@@ -67,7 +68,7 @@ AOC2023_FN(day11_2);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
-	std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
+	//std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
 	//std::cout << day2_1(read_file("day2_1.txt")) << std::endl;
 	//std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
 	//std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
@@ -79,6 +80,7 @@ int main(int argc, char** argv) {
 	//std::cout << day6_1(read_file("day6_1.txt")) << std::endl;
 	//std::cout << day6_2(read_file("day6_2.txt")) << std::endl;
 	//std::cout << day7_1(read_file("day7_1.txt")) << std::endl;
+	//std::cout << day7_2(read_file("day7_2.txt")) << std::endl;
 	//std::cout << day8_1(read_file("day8_1.txt")) << std::endl;
 	//std::cout << day8_2(read_file("day8_2.txt")) << std::endl;
 	//std::cout << day9_1(read_file("day9_1.txt")) << std::endl;
@@ -542,12 +544,14 @@ typedef struct Mapping {
 		range = string_to_number(nums[2]);
 	}
 
-	Mapping(size_t src, size_t range) : src(src), range(range) {}
+	Mapping(size_t src, size_t range) : src(src), range(range) {
+		dst = 0;
+	}
 
 } Mapping;
 
 size_t day5_1_mapping_from_ranges(const std::vector<Mapping> &mappings, size_t value) {
-	for (auto mapping : mappings) {
+	for (auto &mapping : mappings) {
 		if (mapping.src <= value && value < mapping.src + mapping.range) {
 			return value + (mapping.dst - mapping.src);
 		}
@@ -692,6 +696,71 @@ AOC2023_FN(day6_2) {
 
 #pragma region Day7
 
+typedef enum HAND {
+	FIVE_OF = 0,
+	FOUR_OF,
+	FULL_HOUSE,
+	THREE_OF,
+	TWO_PAIR,
+	ONE_PAIR,
+	HIGH
+} HAND;
+
+HAND calculate_hand(std::string hand) {
+	std::unordered_map<char, size_t> card_count;
+
+	for (auto c : hand) {
+		if (card_count.contains(c)) {
+			card_count[c]++;
+		}
+		else {
+			card_count[c] = 1;
+		}
+	}
+
+	bool five = false, four = false, three = false;
+	size_t pair_cntr = 0;
+	for (auto pair : card_count) {
+		switch (pair.second) {
+		case 5:
+			five = true;
+			break;
+		case 4:
+			four = true;
+			break;
+		case 3:
+			three = true;
+			break;
+		case 2:
+			pair_cntr++;
+			break;
+		default:
+			break;
+		}
+	}
+	if (five) {
+		return HAND::FIVE_OF;
+	}
+	else if (four) {
+		return HAND::FOUR_OF;
+	}
+	else if (three && pair_cntr > 0) {
+		return HAND::FULL_HOUSE;
+	}
+	else if (three) {
+		return HAND::THREE_OF;
+	}
+	else if (pair_cntr > 1) {
+		return HAND::TWO_PAIR;
+	}
+	else if (pair_cntr > 0) {
+		return HAND::ONE_PAIR;
+	}
+	else {
+		return HAND::HIGH;
+	}
+}
+
 AOC2023_FN(day7_1) {
 	size_t result = 0;
 
@@ -701,60 +770,11 @@ AOC2023_FN(day7_1) {
 	size_t hand_count = input.size();
 
 	for (auto line : input) {
-		std::unordered_map<char, size_t> card_count;
 		VEC_OF_STR splitted_input = split_string(line, ' ');
 		std::string hand = splitted_input[0];
 		size_t bid = string_to_number(splitted_input[1]);
-		
-		for (auto c : hand) {
-			if (card_count.contains(c)) {
-				card_count[c]++;
-			} else {
-				card_count[c] = 1;
-			}
-		}
-
-		bool five = false, four = false, three = false;
-		size_t pair_cntr = 0;
-		for (auto pair : card_count) {
-			switch (pair.second) {
-			case 5:
-				five = true;
-				break;
-			case 4:
-				four = true;
-				break;
-			case 3:
-				three = true;
-				break;
-			case 2:
-				pair_cntr++;
-				break;
-			default:
-				break;
-			}
-		}
-		if (five) {
-			type_of_hand_and_bid[0].push_back(std::make_pair(hand, bid));
-		}
-		else if (four) {
-			type_of_hand_and_bid[1].push_back(std::make_pair(hand, bid));
-		}
-		else if (three && pair_cntr > 0) {
-			type_of_hand_and_bid[2].push_back(std::make_pair(hand, bid));
-		}
-		else if (three) {
-			type_of_hand_and_bid[3].push_back(std::make_pair(hand, bid));
-		}
-		else if (pair_cntr > 1) {
-			type_of_hand_and_bid[4].push_back(std::make_pair(hand, bid));
-		}
-		else if (pair_cntr > 0) {
-			type_of_hand_and_bid[5].push_back(std::make_pair(hand, bid));
-		}
-		else {
-			type_of_hand_and_bid[6].push_back(std::make_pair(hand, bid));
-		}
+		HAND hand_type = calculate_hand(hand);
+		type_of_hand_and_bid[hand_type].push_back(std::make_pair(hand, bid));
 	}
 
 	for (size_t i = 0; i < hand_type_len; i++) {
@@ -766,6 +786,73 @@ AOC2023_FN(day7_1) {
 			}
 			return a.first.length() < b.first.length();
 		});
+		for (auto bid : type_of_hand_and_bid[i]) {
+			result += (hand_count * bid.second);
+			hand_count--;
+		}
+	}
+
+	return result;
+}
+
+void rec_search(size_t level, std::string &h, std::vector<size_t> idxs, std::string cards, std::string &best) {
+	if (level >= idxs.size()) {
+		return;
+	}
+	for (auto c : cards) {
+		h[idxs[level]] = c;
+		if (calculate_hand(h)< calculate_hand(best)) {
+			best = h;
+		}
+		rec_search(level + 1, h, idxs, cards, best);
+	}
+	h = best;
+}
+
+void rec_search_main(std::string &hand, std::vector<size_t> idxs, std::string cards) {
+	for (auto i: idxs) {
+		hand[i] = 'A';
+	}
+	std::string best;
+	rec_search(0, hand, idxs, cards, best);
+}
+
+// Something doesn't work, but right now I cant figure it out.
+AOC2023_FN(day7_2) {
+	size_t result = 0;
+
+	const uint32_t hand_type_len = 7;
+	std::vector<std::pair<std::string, size_t>> type_of_hand_and_bid[hand_type_len];
+	static std::string strength_order = "AKQT98765432J";
+	size_t hand_count = input.size();
+
+	for (auto line : input) {
+		VEC_OF_STR splitted_input = split_string(line, ' ');
+		std::string hand = splitted_input[0];
+		size_t bid = string_to_number(splitted_input[1]);
+
+		std::vector<size_t> j_pos;
+		for (size_t i = 0; i < hand.length(); i++) {
+			if (hand[i] == 'J') {
+				j_pos.push_back(i);
+			}
+		}
+
+		rec_search_main(hand, j_pos, strength_order);
+
+		HAND hand_type = calculate_hand(hand);
+		type_of_hand_and_bid[hand_type].push_back(std::make_pair(hand, bid));
+	}
+
+	for (size_t i = 0; i < hand_type_len; i++) {
+		std::sort(type_of_hand_and_bid[i].begin(), type_of_hand_and_bid[i].end(), [](std::pair<std::string, size_t>& a, std::pair<std::string, size_t>& b) {
+			for (int j = 0; j < a.first.length() && j < b.first.length(); j++) {
+				if (a.first[j] != b.first[j]) {
+					return strength_order.find(a.first[j]) < strength_order.find(b.first[j]);
+				}
+			}
+			return a.first.length() < b.first.length();
+			});
 		for (auto bid : type_of_hand_and_bid[i]) {
 			result += (hand_count * bid.second);
 			hand_count--;
