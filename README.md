@@ -5,7 +5,7 @@ Learn C++ by solving problems
 ## Current State
 |Day|problem 1|problem 2|
 |:---:|:---:|:---:|
-|1|✅|TODO: Some logic is not correct|
+|1|✅|✅|
 |2|✅|✅|
 |3|✅|✅|
 |4|✅|✅|

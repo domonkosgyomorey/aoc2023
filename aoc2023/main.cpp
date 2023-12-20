@@ -67,7 +67,7 @@ AOC2023_FN(day11_2);
 
 int main(int argc, char** argv) {
 	//std::cout << day1_1(read_file("day1_1.txt")) << std::endl;
-	//std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
+	std::cout<<day1_2(read_file("day1_2.txt"))<<std::endl;
 	//std::cout << day2_1(read_file("day2_1.txt")) << std::endl;
 	//std::cout << day2_2(read_file("day2_2.txt")) << std::endl;
 	//std::cout << day3_1(read_file("day3_1.txt")) << std::endl;
@@ -224,9 +224,10 @@ AOC2023_FN(day1_2) {
 	word_to_digit["seven"] = 8;
 	word_to_digit["eight"] = 9;
 	word_to_digit["nine"] = 10;
+	word_to_digit["0"] = 1;
 
 	const uint16_t MIN_WORD_LEN = 3;
-	const uint16_t MAX_WORD_LEN = 6;
+	const uint16_t MAX_WORD_LEN = 5;
 
 	// For each row
 	for (auto line : input) {
@@ -235,15 +236,15 @@ AOC2023_FN(day1_2) {
 		// For each char
 		for (std::size_t i = 0; i < line.length(); i++) {
 			if (isdigit(line[i])) {
-				l.append(std::to_string(line[i]));
+				// line[i]-'0', because to_string convert char to number, example to_string('1') => "49"
+				l.append(std::to_string(line[i]-'0'));
 				continue;
 			}
 			// check the substring from i to j
-			for (int j = MIN_WORD_LEN; j < MAX_WORD_LEN && i + j - 1 < line.length(); j++) {
-				auto val = word_to_digit[line.substr(i, j)];
-				if (val > 0) {
+			for (size_t j = MIN_WORD_LEN; j <= MAX_WORD_LEN && i + j -1 < line.length(); j++) {
+				if (word_to_digit.find(line.substr(i, j)) !=word_to_digit.end()) {
 					// cause the mapping
-					val -= 1;
+					size_t val = word_to_digit[line.substr(i, j)]-1;
 
 					// put the transformed numbers 
 					l.append(std::to_string(val));
