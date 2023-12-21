@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
 	//std::cout << day9_2(read_file("day9_2.txt")) << std::endl;
 	//std::cout << day10_1(read_file("day10_1.txt")) << std::endl;
 	//std::cout << day11_1(read_file("day11_1.txt")) << std::endl;
+	std::cout << day11_2(read_file("day11_2.txt")) << std::endl;
 	return 0;
 }
 
@@ -864,7 +865,6 @@ AOC2023_FN(day7_2) {
 
 #pragma endregion
 
-
 #pragma region Day8
 
 AOC2023_FN(day8_1) {
@@ -1063,109 +1063,161 @@ AOC2023_SFN(day9_2) {
 
 #pragma region Day10
 
-struct Graph {
-	std::unordered_map<size_t, std::vector<size_t>> adjacency_list;
+typedef enum DIR {
+	LEFT = 0, RIGHT, UP, DOWN,
+	ENUM_LEN
+}DIR;
 
-	void addEdge(size_t u, size_t v) {
-		adjacency_list[u].push_back(v);
+bool day10_can_match(DIR dir, char next_pipe) {
+	const char left_pipe[3] = { 'L', '-', 'F' };
+	const char right_pipe[3] = { 'J', '-', '7' };
+	const char up_pipe[3] = { '|', '7', 'F' };
+	const char down_pipe[3] = { '|', 'L', 'J' };
+
+	int i = 0;
+	switch (dir) {
+	case DIR::LEFT:
+		while (i < 3 && left_pipe[i++] != next_pipe);
+		break;
+	case DIR::RIGHT:
+		while (i < 3 && right_pipe[i++] != next_pipe);
+		break;
+	case DIR::DOWN:
+		while (i < 3 && down_pipe[i++] != next_pipe);
+		break;
+	case DIR::UP:
+		while (i < 3 && up_pipe[i++] != next_pipe);
+		break;
+	}
+	return i < 3;
+}
+
+void rec_walker(size_t i, size_t j, size_t len, size_t& final_len, std::vector<PAIR>& i_was_there,
+	bool& quit, VEC_OF_STR& map, DIR dir) {
+	if (quit) {
+		return;
+	}
+	size_t k = 0;
+	while (i_was_there.size() > 0 && k < i_was_there.size() && (i_was_there[k].first != i || i_was_there[k].second != j)) {
+		k++;
 	}
 
-	std::unordered_map<size_t, size_t> BFS(size_t start) {
-		std::unordered_map<size_t, size_t> distances;
-		std::queue<size_t> q;
-		std::vector<size_t> f;
-
-		q.push(start);
-		distances[start] = 0;
-
-		while (!q.empty()) {
-			size_t current = q.front();
-			q.pop();
-
-			for (size_t neighbor : adjacency_list[current]) {
-				bool found = false;
-				for (int i = 0; i < f.size(); i++) {
-					if (f[i] == neighbor) {
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					q.push(neighbor);
-					distances[neighbor] = distances[current] + 1;
-					f.push_back(neighbor);
-				}
-			}
+	if (k < i_was_there.size()) {
+		if (final_len < len)
+			final_len = len;
+		return;
+	}
+	i_was_there.push_back(std::make_pair(i, j));
+	switch (map[i][j]) {
+	case 'S':
+		if (day10_can_match(DIR::DOWN, map[i+1][j])) {
+			rec_walker(i + 1, j, len + 1, final_len, i_was_there, quit, map, DIR::UP);
 		}
-
-		return distances;
+		if (day10_can_match(DIR::LEFT, map[i][j-1])) {
+			rec_walker(i, j - 1, len + 1, final_len, i_was_there, quit, map, DIR::RIGHT);
+		}
+		if (day10_can_match(DIR::UP, map[i - 1][j])) {
+			rec_walker(i - 1, j, len + 1, final_len, i_was_there, quit, map, DIR::DOWN);
+		}
+		if (day10_can_match(DIR::RIGHT, map[i][j+1])) {
+			rec_walker(i, j + 1, len + 1, final_len, i_was_there, quit, map, DIR::LEFT);
+		}
+		break;
+	case '|':
+		if (dir == DIR::DOWN && day10_can_match(DIR::UP, map[i - 1][j])) {
+			rec_walker(i - 1, j, len + 1, final_len, i_was_there, quit, map, DIR::DOWN);
+		}
+		else if (dir == DIR::UP && day10_can_match(DIR::DOWN, map[i + 1][j])) {
+			rec_walker(i + 1, j, len + 1, final_len, i_was_there, quit, map, DIR::UP);
+		}
+		break;
+	case '-':
+		if (dir == DIR::LEFT && day10_can_match(DIR::RIGHT, map[i][j+1])) {
+			rec_walker(i, j + 1, len + 1, final_len, i_was_there, quit, map, DIR::LEFT);
+		}
+		else if (dir == DIR::RIGHT && day10_can_match(DIR::LEFT, map[i][j-1])) {
+			rec_walker(i, j - 1, len + 1, final_len, i_was_there, quit, map, DIR::RIGHT);
+		}
+		break;
+	case 'L':
+		if (dir == DIR::UP && day10_can_match(DIR::RIGHT, map[i][j+1])) {
+			rec_walker(i, j + 1, len + 1, final_len, i_was_there, quit, map, DIR::LEFT);
+		}
+		else if (dir == DIR::RIGHT && day10_can_match(DIR::UP, map[i + 1][j])) {
+			rec_walker(i + 1, j, len + 1, final_len, i_was_there, quit, map, DIR::DOWN);
+		}
+		break;
+	case 'J':
+		if (dir == DIR::UP && day10_can_match(DIR::LEFT, map[i][j-1])) {
+			rec_walker(i, j - 1, len + 1, final_len, i_was_there, quit, map, DIR::RIGHT);
+		}
+		else if (dir == DIR::LEFT && day10_can_match(DIR::UP, map[i - 1][j])) {
+			rec_walker(i - 1, j, len + 1, final_len, i_was_there, quit, map, DIR::DOWN);
+		}
+		break;
+	case '7':
+		if (dir == DIR::LEFT && day10_can_match(DIR::DOWN, map[i+1][j])) {
+			rec_walker(i + 1, j, len + 1, final_len, i_was_there, quit, map, DIR::UP);
+		}
+		else if (dir == DIR::DOWN && day10_can_match(DIR::LEFT, map[i][j-1])) {
+			rec_walker(i, j - 1, len + 1, final_len, i_was_there, quit, map, DIR::RIGHT);
+		}
+		break;
+	case 'F':
+		if (dir == DIR::DOWN && day10_can_match(DIR::RIGHT, map[i][j+1])) {
+			rec_walker(i, j + 1, len + 1, final_len, i_was_there, quit, map, DIR::LEFT);
+		}
+		else if (dir == DIR::RIGHT && day10_can_match(DIR::DOWN, map[i + 1][j])) {
+			rec_walker(i + 1, j, len + 1, final_len, i_was_there, quit, map, DIR::UP);
+		}
+		break;
+	default:
+		break;
 	}
-};
+}
+
+size_t rec_walker_main(size_t i, size_t j, VEC_OF_STR& map) {
+	std::vector<PAIR> i_was_there;
+	// If we want to go left, what pipes can match with
+
+	
+	size_t final_len = 0;
+	bool quit = false;
+	rec_walker(i, j, 0, final_len, i_was_there, quit, map, DIR::LEFT);
+	return final_len;
+}
 
 
 AOC2023_FN(day10_1) {
 
-	size_t start = {0};
+	size_t start_i = 0;
+	size_t start_j = 0;
 
-	Graph graph;
+	std::string empty_line = "";
+	for (int i = 0; i < input[0].size(); i++) {
+		empty_line.append(".");
+	}
+
+	input.insert(input.begin(), empty_line);
+	input.push_back(empty_line);
 
 	for (size_t i = 0; i < input.size(); i++) {
-		std::string& line = input.at(i);
-		for (size_t j = 0; j < line.size(); j++) {
-			size_t idx = i * line.length()+j;
-			switch (line[j]) {
-			case 'S':
-				start = idx;
-				graph.addEdge(idx, idx - input.size());
-				graph.addEdge(idx, idx + input.size());
-				graph.addEdge(idx, idx - 1);
-				graph.addEdge(idx, idx + 1);
-				break;
-			case '|':
-				graph.addEdge(idx, idx-input.size());
-				graph.addEdge(idx, idx+input.size());
-				break;
-			case '-':
-				graph.addEdge(idx, idx-1);
-				graph.addEdge(idx, idx+1);
-				break;
-			case 'L':
-				graph.addEdge(idx, idx+1);
-				graph.addEdge(idx, idx-input.size());
-				break;
-			case 'J':
-				graph.addEdge(idx, idx-1);
-				graph.addEdge(idx, idx - input.size());
-				break;
-			case '7':
-				graph.addEdge(idx, idx - 1);
-				graph.addEdge(idx, idx + input.size());
-				break;
-				break;
-			case 'F':
-				graph.addEdge(idx, idx + 1);
-				graph.addEdge(idx, idx + input.size());
-				break;
-			default:
-				break;
+		input.at(i).insert(0, ".");
+		input.at(i).append(".");
+	}
+
+	bool quit = false;
+	for (size_t i = 0; i < input.size() && !quit; i++) {
+		for (size_t j = 0; j < input[0].size() && !quit; j++) {
+			if (input[i][j] == 'S') {
+				start_i = i;
+				start_j = j;
+				quit = true;
 			}
 		}
 	}
 
-	std::unordered_map<size_t, size_t> result = graph.BFS(start);
-	size_t max_dist = 0;
-	for (auto pair : result) {
-		if (graph.adjacency_list[pair.first].size() != 2) {
-			continue;
-		}
-		// We know, each node must have just 2 neighbour
-		size_t neigh1_dist = result[graph.adjacency_list[pair.first][0]];
-		size_t neigh2_dist = result[graph.adjacency_list[pair.first][1]];
-		if (neigh1_dist <= pair.second && neigh2_dist <= pair.second) {
-			max_dist = pair.second;
-		}
-	}
-	return max_dist;
+	return rec_walker_main(start_i, start_j, input);
 }
 
 #pragma endregion
@@ -1222,6 +1274,77 @@ AOC2023_FN(day11_1) {
 			PAIR s = galaxy_lookup[j];
 			res += (llabs(f.first - s.first) + llabs(f.second - s.second));
 			
+		}
+	}
+	return res;
+}
+
+AOC2023_FN(day11_2) {
+	std::vector<char> empty_col;
+
+	size_t num_of_galaxy = 0;
+	std::unordered_map<size_t, PAIR> galaxy_lookup;
+
+	std::set<size_t> empty_row_i;
+	std::set<size_t> empty_col_i;
+
+	for (size_t i = 0; i < input[0].length(); i++) {
+		empty_col.push_back(1);
+	}
+	for (size_t i = 0; i < input.size(); i++) {
+		std::string line = input[i];
+		size_t j = 0;
+		bool good = false;
+		for (; j < line.length(); j++) {
+			empty_col[j] *= (line[j] == '.');
+			if (line[j] != '.') {
+				good = true;
+			}
+		}
+		if (!good) {
+			empty_row_i.insert(i);
+		}
+	}
+
+	for (size_t i = 0; i < empty_col.size(); i++) {
+		if (empty_col[i]) {
+			empty_col_i.insert(i);
+		}
+	}
+
+	for (size_t i = 0; i < input.size(); i++) {
+		for (size_t j = 0; j < input[i].size(); j++) {
+			if (input[i][j] == '#') {
+				galaxy_lookup[num_of_galaxy++] = std::make_pair(i, j);
+			}
+		}
+	}
+
+	size_t res = 0;
+	for (size_t i = 0; i < num_of_galaxy - 1; i++) {
+		for (size_t j = i + 1; j < num_of_galaxy; j++) {
+			PAIR f = galaxy_lookup[i];
+			PAIR s = galaxy_lookup[j];
+			res += (llabs(f.first - s.first) + llabs(f.second - s.second));
+			// y start
+			size_t y_s = f.first<s.first?f.first:s.first;
+			// y end
+			size_t y_e = f.first>s.first?f.first:s.first;
+			size_t x_s = f.second<s.second?f.second:s.second;
+			size_t x_e = f.second>s.second?f.second:s.second;
+			size_t k = 0;
+
+			for (auto col_i : empty_col_i) {
+				if (x_s < col_i && col_i < x_e) {
+					// 1 million -1 , because, we add one in this iteration
+					res += 999999;
+				}
+			}
+			for (auto row_i : empty_row_i) {
+				if (y_s < row_i && row_i < y_e) {
+					res += 999999;
+				}
+			}
 		}
 	}
 	return res;
