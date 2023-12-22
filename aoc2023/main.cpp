@@ -8,8 +8,9 @@
 #include <algorithm>
 #include <sstream>
 #include <cctype>
-#include <thread>
 #include <queue>
+#include <thread>
+#include <execution>
 
 #define AOC2023_FN(fn_name) size_t (fn_name)(std::vector<std::string> input)
 #define AOC2023_SFN(fn_name) int64_t (fn_name)(std::vector<std::string> input)
@@ -64,6 +65,9 @@ AOC2023_FN(day10_2);
 AOC2023_FN(day11_1);
 AOC2023_FN(day11_2);
 
+AOC2023_FN(day12_1);
+AOC2023_FN(day12_2);
+
 #pragma endregion
 
 int main(int argc, char** argv) {
@@ -87,7 +91,8 @@ int main(int argc, char** argv) {
 	//std::cout << day9_2(read_file("day9_2.txt")) << std::endl;
 	//std::cout << day10_1(read_file("day10_1.txt")) << std::endl;
 	//std::cout << day11_1(read_file("day11_1.txt")) << std::endl;
-	std::cout << day11_2(read_file("day11_2.txt")) << std::endl;
+	//std::cout << day11_2(read_file("day11_2.txt")) << std::endl;
+	std::cout << day12_1(read_file("day12_1.txt")) << std::endl;
 	return 0;
 }
 
@@ -1348,6 +1353,87 @@ AOC2023_FN(day11_2) {
 		}
 	}
 	return res;
+}
+
+#pragma endregion
+
+#pragma region Day12
+
+static const char day12_possible_states[] = {'.', '#'};
+static const char day12_possible_states_len = 2;
+
+bool day12_is_possible_configuration(const std::string &configuration, const std::vector<size_t> &rules) {
+	VEC_OF_STR conf = split_string(configuration, '.');
+	VEC_OF_STR filtered_conf;
+	for (size_t i = 0; i < conf.size(); i++) {
+		if (conf[i].length() != 0) {
+			filtered_conf.push_back(conf[i]);
+		}
+	}
+	if (filtered_conf.size() != rules.size()) {
+		return false;
+	}
+
+	for (size_t i = 0; i < filtered_conf.size(); i++) {
+		if (filtered_conf[i].length() != rules[i]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+AOC2023_FN(day12_1) {
+
+	static size_t result = 0;
+
+	static const char conditions[] = { '.', '#' };
+
+	static size_t nth = 0;
+
+	// Put out these variables from the loop
+	
+	std::for_each(std::execution::par, input.begin(), input.end(), [](std::string& line) {
+		std::vector<size_t> rules;
+		std::vector<size_t> unknow_spring_condition_indices;
+		VEC_OF_STR data;
+
+		// the len exactly 2
+		data = split_string(line, ' ');
+
+		for (auto str_num : split_string(data[1], ',')) {
+			rules.push_back(string_to_number(str_num));
+		}
+
+		size_t i;
+		for (i = 0; i < data[0].length(); i++) {
+			if (data[0][i] == '?') {
+				unknow_spring_condition_indices.push_back(i);
+			}
+		}
+
+		i = 0;
+		// if unknow.. size=2 => we can visualize the possible configuration in 2^'size' way, so in 'size' amount of bit
+		while (i < pow(2, unknow_spring_condition_indices.size())) {
+			// Must has to be a copy of the original
+			std::string configuration = data[0];
+
+			// iterate over a number's bits
+			// We know the number bit len = unknow...size()
+			for (size_t j = 0; j < unknow_spring_condition_indices.size(); j++) {
+				size_t nth_bit = (i >> j) & 1;
+				configuration[unknow_spring_condition_indices[j]] = conditions[nth_bit];
+			}
+
+			if (day12_is_possible_configuration(configuration, rules)) {
+				result += 1;
+			}
+			i++;
+		}
+		std::cout << nth++ << std::endl;
+		});
+	
+	return result;
 }
 
 #pragma endregion
