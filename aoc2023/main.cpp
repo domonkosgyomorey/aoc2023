@@ -68,6 +68,11 @@ AOC2023_FN(day11_2);
 AOC2023_FN(day12_1);
 AOC2023_FN(day12_2);
 
+AOC2023_FN(day13_1);
+
+AOC2023_FN(day14_1);
+AOC2023_FN(day14_2);
+
 #pragma endregion
 
 int main(int argc, char** argv) {
@@ -92,7 +97,10 @@ int main(int argc, char** argv) {
 	//std::cout << day10_1(read_file("day10_1.txt")) << std::endl;
 	//std::cout << day11_1(read_file("day11_1.txt")) << std::endl;
 	//std::cout << day11_2(read_file("day11_2.txt")) << std::endl;
-	std::cout << day12_1(read_file("day12_1.txt")) << std::endl;
+	//std::cout << day12_1(read_file("day12_1.txt")) << std::endl;
+	//std::cout << day13_1(read_file("day13_1.txt")) << std::endl;
+	//std::cout << day14_1(read_file("day14_1.txt")) << std::endl;
+	std::cout << day14_2(read_file("day14_2.txt")) << std::endl;
 	return 0;
 }
 
@@ -1433,6 +1441,195 @@ AOC2023_FN(day12_1) {
 		std::cout << nth++ << std::endl;
 		});
 	
+	return result;
+}
+
+#pragma endregion
+
+#pragma region Day13
+
+AOC2023_FN(day13_1) {
+	
+	size_t result = 0;
+
+	// For every row
+	// { (input1){line, line}, (input2){line, line, line} }
+	std::vector<VEC_OF_STR> row_input;
+	// For every column
+	// { (input1){line, line}, (input2){line, line, line} }
+	std::vector<VEC_OF_STR> col_input;
+	
+	// Pre determine the number of inputs
+	size_t num_of_inputs = 1;
+	for (auto line : input) {
+		if (line == "") {
+			num_of_inputs++;
+		}
+	}
+	// divide by 2, because row, and column input are different
+	num_of_inputs /= 2;
+
+	// Add that amount of empty vector
+	for (int i = 0; i < num_of_inputs; i++) {
+		row_input.push_back({});
+		col_input.push_back({});
+	}
+
+	// Fill the col, and row vectors, with the corresponding input
+	size_t counter = 0;
+	// The index for the row vector (-1 because the second input is the first for the rows)
+	size_t row_c = -1;
+	// The index for the col vector
+	size_t col_c = 0;
+	for (size_t i = 0; i < input.size(); i++) {
+		std::string line = input[i];
+		if (line == "") {
+			counter++;
+			col_c += (counter % 2 == 0);
+			row_c += (counter % 2 != 0);
+		} else if (counter % 2 == 0) {
+			col_input[col_c].push_back(line);
+		} else {
+			row_input[row_c].push_back(line);
+		}
+	}
+	
+	for (auto &i_input : col_input) {
+		
+		VEC_OF_STR col_strs;
+		// Create the col_strs vector with size of i_input[0].length()
+		for (size_t j = 0; j < i_input[0].length(); j++) {
+			col_strs.push_back(std::string(""));
+		}
+		
+		// Fill the col vector with the columns
+		for (size_t i = 0; i < i_input.size(); i++) {
+			for (size_t j = 0; j < i_input[i].length(); j++) {
+				col_strs[j].push_back(i_input[i][j]);
+			}
+		}
+
+		std::string prev_col = col_strs[0];
+		for (size_t i = 1; i < col_strs.size(); i++) {
+			if (prev_col == col_strs[i]) {
+				result += i;
+			}
+			prev_col = col_strs[i];
+		}
+	}
+
+	for (auto& i_input : row_input) {
+		std::string prev_row = i_input[0];
+		for (size_t i = 1; i < i_input.size(); i++) {
+			if (prev_row == i_input[i]) {
+				std::cout << prev_row << std::endl;
+				std::cout << i_input[i] << std::endl;
+				result += (i + 1) * 100;
+			}
+			prev_row = i_input[i];
+		}
+	}
+
+	return result;
+}
+
+#pragma endregion
+
+#pragma region Day14
+
+AOC2023_FN(day14_1) {
+	for (size_t i = 1; i < input.size(); i++) {
+		for (size_t j = 0; j < input[i].length(); j++) {
+			if (input[i][j] == 'O') {
+				size_t  k = i;
+				while (k >= 1 && input[k - 1][j] == '.') {
+					input[k - 1][j] = 'O';
+					input[k][j] = '.';
+					k--;
+				}
+			}
+		}
+	}
+	
+	size_t result = 0;
+
+	for(size_t i = 0; i < input.size(); i++) {
+		for(size_t j = 0; j < input[i].length(); j++) {
+			if(input[i][j] == 'O') {
+				result += input.size()-i;
+			}
+		}
+	}
+
+	return result;
+}
+
+typedef enum DAY14_DIR{
+	NORTH=0,
+	WEST,
+	SOUTH,
+	EAST
+};
+
+AOC2023_FN(day14_2) {
+	for (size_t it = 0; it < 1000000000; it++) {
+		std::cout << (it / 1000000000.0) * 100 << "%" << std::endl;
+		for (char sn = 0; sn < 4; sn++) {
+			for (size_t i = 1; i < input.size(); i++) {
+				for (size_t j = 0; j < input[i].length(); j++) {
+					if (input[i][j] == 'O') {
+						size_t  k = i;
+						switch (sn) {
+						case DAY14_DIR::NORTH:
+							while (k >= 1 && input[k - 1][j] == '.') {
+								input[k - 1][j] = 'O';
+								input[k][j] = '.';
+								k--;
+							}
+							break;
+						case DAY14_DIR::WEST:
+							k = j;
+							while (k >= 1 && input[i][k - 1] == '.') {
+								input[i][k - 1] = 'O';
+								input[i][k] = '.';
+								k--;
+							}
+							break;
+						case DAY14_DIR::SOUTH:
+							k = i;
+							while (k < input.size() - 1 && input[k + 1][j] == '.') {
+								input[k + 1][j] = 'O';
+								input[k][j] = '.';
+								k++;
+							}
+							break;
+						case DAY14_DIR::EAST:
+							k = j;
+							while (k < input[0].length() - 1 && input[i][k + 1] == '.') {
+								input[i][k + 1] = 'O';
+								input[i][k] = '.';
+								k++;
+							}
+							break;
+						default:
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	size_t result = 0;
+
+	for (size_t i = 0; i < input.size(); i++) {
+		for (size_t j = 0; j < input[i].length(); j++) {
+			if (input[i][j] == 'O') {
+				result += input.size() - i;
+			}
+		}
+	}
+
 	return result;
 }
 
