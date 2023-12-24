@@ -91,6 +91,7 @@
     </Text>
     <Text Include="day14_1.txt" />
     <Text Include="day14_2.txt" />
+    <Text Include="day15_1.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

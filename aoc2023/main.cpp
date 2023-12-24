@@ -73,6 +73,8 @@ AOC2023_FN(day13_1);
 AOC2023_FN(day14_1);
 AOC2023_FN(day14_2);
 
+AOC2023_FN(day15_1);
+
 #pragma endregion
 
 int main(int argc, char** argv) {
@@ -100,7 +102,8 @@ int main(int argc, char** argv) {
 	//std::cout << day12_1(read_file("day12_1.txt")) << std::endl;
 	//std::cout << day13_1(read_file("day13_1.txt")) << std::endl;
 	//std::cout << day14_1(read_file("day14_1.txt")) << std::endl;
-	std::cout << day14_2(read_file("day14_2.txt")) << std::endl;
+	//std::cout << day14_2(read_file("day14_2.txt")) << std::endl;
+	std::cout << day15_1(read_file("day15_1.txt")) << std::endl;
 	return 0;
 }
 
@@ -1628,6 +1631,29 @@ AOC2023_FN(day14_2) {
 				result += input.size() - i;
 			}
 		}
+	}
+
+	return result;
+}
+
+#pragma endregion
+
+#pragma region Day15
+
+AOC2023_FN(day15_1) {
+	size_t result = 0;
+	
+	// Input is just one line
+	VEC_OF_STR s_line = split_string(input[0], ',');
+	
+	for (auto& str : s_line) {
+		size_t inner_result = 0;
+		for (auto c : str) {
+			inner_result += ((size_t)c);
+			inner_result *= 17;
+			inner_result %= 256;
+		}
+		result += inner_result;
 	}
 
 	return result;
